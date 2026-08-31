@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6fb;
+}
+
+.popup-card {
+  width: 260px;
+  padding: 18px 16px 14px;
+  box-sizing: border-box;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  color: #1f2937;
+}
+
+.subtitle {
+  margin: 0 0 14px;
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button.primary {
+  background: #2563eb;
+  color: white;
+}
+
+button:not(.primary) {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.status {
+  margin-top: 14px;
+  color: #065f46;
+  font-size: 13px;
+  min-height: 18px;
+}
