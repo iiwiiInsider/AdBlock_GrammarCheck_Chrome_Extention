@@ -193,13 +193,47 @@ function isTextEditableElement(element) {
   return false;
 }
 
+function getCaretPositionInContentEditable(element) {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return (element.textContent || '').length;
+  }
+
+  const range = selection.getRangeAt(0).cloneRange();
+  const preCaretRange = range.cloneRange();
+  preCaretRange.selectNodeContents(element);
+  preCaretRange.setEnd(range.endContainer, range.endOffset);
+  return preCaretRange.toString().length;
+}
+
+function setCaretPositionInContentEditable(element, offset) {
+  const selection = window.getSelection();
+  if (!selection) {
+    return;
+  }
+
+  const textNode = element.firstChild || document.createTextNode('');
+  if (!element.firstChild) {
+    element.appendChild(textNode);
+  }
+
+  const range = document.createRange();
+  range.setStart(textNode, Math.min(offset, textNode.textContent.length));
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
 function getWordInfoFromInput(element) {
   if (!element || !isTextEditableElement(element)) {
     return null;
   }
 
-  const value = element.value || '';
-  const cursorPosition = element.selectionStart ?? value.length;
+  const value = element.value ?? element.textContent ?? '';
+  const cursorPosition = element.isContentEditable
+    ? getCaretPositionInContentEditable(element)
+    : (element.selectionStart ?? value.length);
+
   let start = cursorPosition;
   let end = cursorPosition;
 
@@ -252,13 +286,23 @@ function renderSuggestions(element, wordInfo) {
     button.className = 'spell-correcter-suggestion';
     button.textContent = applyCase(wordInfo.word, suggestion);
     button.addEventListener('click', () => {
-      const before = element.value.slice(0, wordInfo.start);
-      const after = element.value.slice(wordInfo.end);
+      const currentText = element.value ?? element.textContent ?? '';
+      const before = currentText.slice(0, wordInfo.start);
+      const after = currentText.slice(wordInfo.end);
       const replacement = applyCase(wordInfo.word, suggestion);
-      element.value = `${before}${replacement}${after}`;
-      const caretIndex = before.length + replacement.length;
-      element.focus();
-      element.setSelectionRange(caretIndex, caretIndex);
+      const updatedText = `${before}${replacement}${after}`;
+
+      if (element.isContentEditable) {
+        element.textContent = updatedText;
+        const caretIndex = before.length + replacement.length;
+        setCaretPositionInContentEditable(element, caretIndex);
+      } else {
+        element.value = updatedText;
+        const caretIndex = before.length + replacement.length;
+        element.focus();
+        element.setSelectionRange(caretIndex, caretIndex);
+      }
+
       hideSuggestions();
     });
     box.appendChild(button);
@@ -272,6 +316,7 @@ function renderSuggestions(element, wordInfo) {
   box.style.left = `${Math.max(10, left)}px`;
   box.style.top = `${Math.max(10, top)}px`;
   box.style.width = `${boxWidth}px`;
+  box.style.display = 'flex';
 }
 
 function correctElement(element) {
