@@ -1,5 +1,4 @@
 const toggleButton = document.getElementById('toggle');
-const fixButton = document.getElementById('fix');
 const statusText = document.getElementById('status');
 
 async function getEnabledState() {
@@ -49,25 +48,4 @@ async function updateToggleState(enabled) {
     });
   });
 
-  fixButton.addEventListener('click', () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const activeTab = tabs[0];
-      if (!activeTab) {
-        setStatus('No active tab found.', false);
-        return;
-      }
-
-      chrome.tabs.sendMessage(activeTab.id, { action: 'fixCurrentPage' }, (response) => {
-        if (chrome.runtime.lastError) {
-          setStatus('This page cannot be edited here.', false);
-          return;
-        }
-
-        const message = response && response.fixedCount > 0
-          ? `Corrected ${response.fixedCount} field(s).`
-          : 'No common misspellings found.';
-        setStatus(message, true);
-      });
-    });
-  });
 })();
