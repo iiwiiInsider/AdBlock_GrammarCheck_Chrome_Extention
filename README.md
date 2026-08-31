@@ -1,6 +1,6 @@
 # Typing Auto Spell Correcter
 
-A lightweight Chrome extension that automatically corrects common typing mistakes as you type in text fields and editable content areas.
+A lightweight Chrome extension UI that automatically corrects common typing mistakes as you type in text fields and editable content areas.
 
 ## Features
 
