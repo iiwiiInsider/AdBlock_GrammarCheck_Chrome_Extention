@@ -3,7 +3,6 @@
   "name": "Typing Auto Spell Correcter",
   "description": "Corrects common spelling mistakes while you type across web pages.",
   "version": "1.0.0",
-  "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
   "icons": {
     "16": "logo.png",

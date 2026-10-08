@@ -8,8 +8,8 @@ A lightweight Chrome extension UI that automatically corrects common typing mist
 - Works in text inputs, textareas, and contenteditable elements
 - Choose a spelling suggestion by clicking it; Tab keeps its normal browser focus-navigation behavior
 - Suggestion buttons wrap long words and resize to fit the viewport
-- Includes a popup toggle to enable or disable the feature
-- Includes a “Fix This Page” action to correct existing fields on the current page
+- Automatically enables spelling correction on every supported page
+- Automatically corrects known common misspellings in existing editable fields when a page loads
 - Hides common ad containers and embeds on webpages
 
 ## Load in Chrome
@@ -27,13 +27,12 @@ A lightweight Chrome extension UI that automatically corrects common typing mist
 - `english-words.txt` – bundled offline English word list
 - `ENGLISH-WORDS-LICENSE.txt` – word-list attribution and license terms
 - `popup.html` – extension popup UI
-- `popup.js` – popup logic to toggle and fix current page
 - `popup.css` – popup styling
 
 ## Notes
 
-The extension bundles an offline word list of about 645,000 unique words, including American, British, Canadian, and Australian spelling variants. It uses this list to recognize words and provide suggestions; automatic replacements remain limited to the common typo mappings in `content.js`.
+The extension bundles an offline word list of about 645,000 unique words, including American, British, Canadian, and Australian spelling variants. It uses this list to recognize words and suggest corrections for misspellings, including adjacent-letter transpositions. Automatic replacements use a curated set of more than 200 common typo mappings in `content.js`; other uncertain matches are shown as suggestions rather than changed automatically.
 The word list is derived from [SCOWL/GNU Aspell](https://github.com/en-wl/wordlist) through the [dictionary-word-list](https://github.com/nlile/dictionary-word-list) project. See [ENGLISH-WORDS-LICENSE.txt](./ENGLISH-WORDS-LICENSE.txt) for attribution and license terms.
 
 Ad filtering hides recognized page elements; it does not block network requests, and some ads may not be detected.
-The popup injects the content script on demand if it is not yet available in the active tab. Chrome restricts extensions from running on some pages, including Chrome settings and the Chrome Web Store.
+Content-script suggestions work in supported webpage fields, not Chrome's address bar or browser UI. Chrome also restricts extensions from running on some pages, including Chrome settings and the Chrome Web Store.

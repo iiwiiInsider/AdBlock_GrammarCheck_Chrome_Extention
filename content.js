@@ -6,49 +6,232 @@
   globalThis[initializedKey] = true;
 
 const commonCorrections = {
-  teh: 'the',
-  thier: 'their',
+  abscence: 'absence',
+  abudance: 'abundance',
+  accomodate: 'accommodate',
+  accomodation: 'accommodation',
+  acheive: 'achieve',
+  achievment: 'achievement',
+  acknowlege: 'acknowledge',
+  acommodate: 'accommodate',
+  aparent: 'apparent',
+  apparant: 'apparent',
+  appearence: 'appearance',
+  appologize: 'apologize',
+  arguement: 'argument',
+  arangement: 'arrangement',
+  begining: 'beginning',
+  beleive: 'believe',
+  calander: 'calendar',
+  calender: 'calendar',
+  catagory: 'category',
+  collegue: 'colleague',
+  comittee: 'committee',
+  comming: 'coming',
+  concensus: 'consensus',
+  definately: 'definitely',
+  definate: 'definite',
+  dissapear: 'disappear',
+  dissapoint: 'disappoint',
+  embarass: 'embarrass',
+  enviroment: 'environment',
+  existance: 'existence',
+  experiance: 'experience',
+  familar: 'familiar',
+  finaly: 'finally',
+  foriegn: 'foreign',
+  fourty: 'forty',
+  freind: 'friend',
+  goverment: 'government',
+  grammer: 'grammar',
+  happend: 'happened',
+  independant: 'independent',
+  knowlege: 'knowledge',
+  liason: 'liaison',
+  librarry: 'library',
+  maintenence: 'maintenance',
+  millenium: 'millennium',
+  neccessary: 'necessary',
+  occassion: 'occasion',
+  occured: 'occurred',
+  ocurred: 'occurred',
+  perserverance: 'perseverance',
+  posession: 'possession',
+  potencial: 'potential',
+  prefered: 'preferred',
+  priviledge: 'privilege',
+  recieved: 'received',
   recieve: 'receive',
   recieving: 'receiving',
+  recomend: 'recommend',
+  refered: 'referred',
+  relevent: 'relevant',
+  seperate: 'separate',
   seperat: 'separate',
   seprate: 'separate',
-  acount: 'account',
+  succesful: 'successful',
+  suprise: 'surprise',
+  teh: 'the',
+  thier: 'their',
+  tommorow: 'tomorrow',
+  truely: 'truly',
+  untill: 'until',
+  wierd: 'weird',
+  wich: 'which',
   adress: 'address',
+  adresss: 'address',
+  aggresive: 'aggressive',
+  agressive: 'aggressive',
+  aquaintance: 'acquaintance',
+  basicly: 'basically',
+  bussiness: 'business',
+  buisness: 'business',
+  cemetry: 'cemetery',
+  changeing: 'changing',
+  comitted: 'committed',
+  comparision: 'comparison',
+  completly: 'completely',
+  consistant: 'consistent',
+  convinient: 'convenient',
+  critisize: 'criticize',
+  curiousity: 'curiosity',
+  decison: 'decision',
+  descision: 'decision',
+  desparate: 'desperate',
+  developement: 'development',
+  diffrent: 'different',
+  dimention: 'dimension',
+  diptheria: 'diphtheria',
+  disagrement: 'disagreement',
+  disapoint: 'disappoint',
+  ecstacy: 'ecstasy',
+  eightteen: 'eighteen',
+  equiptment: 'equipment',
+  excellant: 'excellent',
+  excercise: 'exercise',
+  facist: 'fascist',
+  familliar: 'familiar',
+  feeled: 'felt',
+  firey: 'fiery',
+  flourescent: 'fluorescent',
+  forsee: 'foresee',
+  gaurd: 'guard',
+  genuin: 'genuine',
+  greatful: 'grateful',
+  guage: 'gauge',
+  harrass: 'harass',
+  imediately: 'immediately',
+  imediatly: 'immediately',
+  immitate: 'imitate',
+  incidently: 'incidentally',
+  indefinately: 'indefinitely',
+  indispensible: 'indispensable',
+  inteligence: 'intelligence',
+  intresting: 'interesting',
+  jewellry: 'jewelry',
+  kernal: 'kernel',
+  liesure: 'leisure',
+  lisence: 'license',
+  lonley: 'lonely',
+  manuever: 'maneuver',
+  mischievious: 'mischievous',
+  mispell: 'misspell',
+  neice: 'niece',
+  noticable: 'noticeable',
+  ocasion: 'occasion',
+  occurrance: 'occurrence',
+  omision: 'omission',
+  oportunity: 'opportunity',
+  parliment: 'parliament',
+  persistance: 'persistence',
+  persue: 'pursue',
+  pratice: 'practice',
+  propoganda: 'propaganda',
+  publically: 'publicly',
+  realy: 'really',
+  recomendation: 'recommendation',
+  restaraunt: 'restaurant',
+  rythym: 'rhythm',
+  santion: 'sanction',
+  sheat: 'sheet',
+  similiar: 'similar',
+  sincerly: 'sincerely',
+  spearayte: 'separate',
+  supercede: 'supersede',
+  tendancy: 'tendency',
+  therefor: 'therefore',
+  tounge: 'tongue',
+  transfered: 'transferred',
+  unfortunatly: 'unfortunately',
+  usefull: 'useful',
+  villian: 'villain',
+  weild: 'wield',
+  writting: 'writing',
+  xmas: 'Christmas',
+  acount: 'account',
+  accross: 'across',
+  agian: 'again',
+  allmost: 'almost',
+  allready: 'already',
+  anounce: 'announce',
+  anser: 'answer',
+  apparantly: 'apparently',
+  becuase: 'because',
+  beginining: 'beginning',
+  beleif: 'belief',
+  benifit: 'benefit',
+  bizzare: 'bizarre',
+  brocolli: 'broccoli',
+  caffiene: 'caffeine',
+  cemetary: 'cemetery',
+  cheif: 'chief',
+  cliant: 'client',
+  diffrence: 'difference',
+  disapointed: 'disappointed',
+  enviornment: 'environment',
+  eventhough: 'even though',
+  everyting: 'everything',
+  foward: 'forward',
+  freindly: 'friendly',
+  governer: 'governor',
+  hieght: 'height',
+  importent: 'important',
+  interupt: 'interrupt',
+  langauge: 'language',
+  lenght: 'length',
+  mispelled: 'misspelled',
+  necesary: 'necessary',
+  offical: 'official',
+  ommit: 'omit',
+  oppertunity: 'opportunity',
+  possable: 'possible',
+  probaly: 'probably',
+  recieveing: 'receiving',
+  remeber: 'remember',
+  responsibile: 'responsible',
+  seperateley: 'separately',
+  succesfully: 'successfully',
+  tahn: 'than',
+  tommorrow: 'tomorrow',
+  untimatly: 'ultimately',
+  wierdly: 'weirdly',
+  woudl: 'would',
   alot: 'a lot',
   amoung: 'among',
-  begining: 'beginning',
-  calender: 'calendar',
-  comming: 'coming',
-  definately: 'definitely',
-  desparate: 'desperate',
-  enviroment: 'environment',
   exmaple: 'example',
-  foriegn: 'foreign',
   goign: 'going',
-  happend: 'happened',
   happne: 'happen',
   indespensible: 'indispensable',
   intial: 'initial',
   lanauge: 'language',
   maintainance: 'maintenance',
   mathces: 'matches',
-  mispell: 'misspell',
-  neccessary: 'necessary',
-  occured: 'occurred',
   paramenter: 'parameter',
   paramters: 'parameters',
-  persistance: 'persistence',
-  refered: 'referred',
-  seperate: 'separate',
-  succesful: 'successful',
-  untill: 'until',
-  usefull: 'useful',
   wether: 'whether',
   whetever: 'whenever',
-  wierd: 'weird',
-  writting: 'writing',
   whoel: 'whole',
-  xmas: 'Christmas'
+  deatachmens: 'detachments'
 };
 
 let dictionaryText = '';
@@ -103,6 +286,11 @@ function initializeDictionary(text) {
   }
 
   dictionaryReady = true;
+
+  const activeElement = document.activeElement;
+  if (activeElement && isTextEditableElement(activeElement)) {
+    handleTypingSuggestions({ target: activeElement });
+  }
 }
 
 fetch(chrome.runtime.getURL('english-words.txt'))
@@ -122,10 +310,6 @@ const state = {
 };
 
 const suggestionBoxId = 'spell-correcter-suggestions';
-
-chrome.storage.local.get(['spellCorrecterEnabled'], (result) => {
-  state.enabled = result.spellCorrecterEnabled !== false;
-});
 
 function injectSuggestionStyles() {
   if (document.getElementById('spell-correcter-suggestions-style')) {
@@ -217,6 +401,14 @@ function levenshteinDistance(a, b, rows) {
         current[j - 1] + 1,
         previous[j - 1] + cost
       );
+      if (
+        i > 1 &&
+        j > 1 &&
+        a[i - 1] === b[j - 2] &&
+        a[i - 2] === b[j - 1]
+      ) {
+        current[j] = Math.min(current[j], rows[2][j - 2] + 1);
+      }
       rowMinimum = Math.min(rowMinimum, current[j]);
     }
 
@@ -224,6 +416,7 @@ function levenshteinDistance(a, b, rows) {
       return 3;
     }
 
+    rows[2].set(previous);
     [previous, current] = [current, previous];
   }
 
@@ -267,6 +460,7 @@ function getDictionarySuggestions(word, limit = 5) {
   }
 
   const rows = [
+    new Uint8Array(normalized.length + 3),
     new Uint8Array(normalized.length + 3),
     new Uint8Array(normalized.length + 3)
   ];
@@ -381,7 +575,7 @@ function getWordInfoFromInput(element) {
     return null;
   }
 
-  if (dictionaryContains(word.toLowerCase())) {
+  if (!commonCorrections[word.toLowerCase()] && dictionaryContains(word.toLowerCase())) {
     return null;
   }
 
@@ -544,6 +738,10 @@ function correctCompletedWord(element) {
   const cursorPosition = element.isContentEditable
     ? getCaretPositionInContentEditable(element)
     : (element.selectionStart ?? value.length);
+  if (cursorPosition > 0 && /[\p{L}\p{M}'-]/u.test(value[cursorPosition - 1])) {
+    return false;
+  }
+
   let end = cursorPosition;
 
   if (end > 0 && !/[\p{L}\p{M}'-]/u.test(value[end - 1])) {
@@ -621,13 +819,23 @@ function observeTextInputs() {
   });
 }
 
-function fixAllEditableFields() {
-  const editableElements = document.querySelectorAll(
-    'textarea, input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]), [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]'
-  );
+function fixAllEditableFields(root = document) {
+  const editableSelector =
+    'textarea, input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="reset"]), [contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]';
+  const editableElements = new Set();
+  if (root instanceof Element && root.matches(editableSelector)) {
+    editableElements.add(root);
+  }
+  root.querySelectorAll(editableSelector).forEach((element) => {
+    editableElements.add(element);
+  });
 
   let count = 0;
   editableElements.forEach((element) => {
+    if (!isTextEditableElement(element)) {
+      return;
+    }
+
     const before = element.value ?? element.textContent ?? '';
     const after = before.replace(/[\p{L}][\p{L}'-]*/gu, (match) => {
       const lower = match.toLowerCase();
@@ -650,32 +858,42 @@ function fixAllEditableFields() {
   return count;
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'toggle') {
-    state.enabled = !!message.enabled;
-    chrome.storage.local.set({ spellCorrecterEnabled: state.enabled });
-    if (!state.enabled) {
-      hideSuggestions();
-    }
-    sendResponse({ enabled: state.enabled });
-    return true;
-  }
+function observeEditableFields() {
+  const observer = new MutationObserver((records) => {
+    const roots = new Set();
+    records.forEach((record) => {
+      if (record.type === 'attributes') {
+        roots.add(record.target);
+        return;
+      }
 
-  if (message.action === 'status') {
-    sendResponse({ enabled: state.enabled });
-    return true;
-  }
+      record.addedNodes.forEach((node) => {
+        if (node instanceof Element) {
+          roots.add(node);
+        }
+      });
 
-  if (message.action === 'fixCurrentPage') {
-    const fixedCount = fixAllEditableFields();
-    sendResponse({ fixedCount });
-    return true;
-  }
+      const editableAncestor = record.target.parentElement?.closest(
+        '[contenteditable="true"], [contenteditable=""], [contenteditable="plaintext-only"]'
+      );
+      if (editableAncestor) {
+        roots.add(editableAncestor);
+      }
+    });
+    roots.forEach((root) => fixAllEditableFields(root));
+  });
 
-  return false;
-});
+  observer.observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['contenteditable', 'type']
+  });
+}
 
 injectSuggestionStyles();
 hideSuggestions();
 observeTextInputs();
+fixAllEditableFields();
+observeEditableFields();
 })();
