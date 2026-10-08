@@ -25,21 +25,48 @@ async function updateToggleState(enabled) {
 
 async function handleActiveTabMessage(action, onSuccess, onError) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
-    if (!activeTab) {
+    const queryError = chrome.runtime.lastError;
+    if (queryError) {
       onError?.('Unable to access this tab.');
       return;
     }
 
-    chrome.tabs.sendMessage(activeTab.id, action, (response) => {
-      const lastError = chrome.runtime.lastError;
-      if (lastError) {
-        onError?.('This page is not ready for a content script update.');
-        return;
-      }
+    const activeTab = tabs[0];
+    if (!activeTab || activeTab.id === undefined) {
+      onError?.('Unable to access this tab.');
+      return;
+    }
 
-      onSuccess?.(response);
-    });
+    let injectionAttempted = false;
+    const sendMessage = () => {
+      chrome.tabs.sendMessage(activeTab.id, action, (response) => {
+        const messageError = chrome.runtime.lastError;
+        if (!messageError) {
+          onSuccess?.(response);
+          return;
+        }
+
+        if (injectionAttempted) {
+          onError?.('Could not communicate with the content script on this page.');
+          return;
+        }
+
+        injectionAttempted = true;
+        chrome.scripting.executeScript(
+          { target: { tabId: activeTab.id }, files: ['content.js'] },
+          () => {
+            const injectionError = chrome.runtime.lastError;
+            if (injectionError) {
+              onError?.('Chrome does not allow content scripts on this page.');
+              return;
+            }
+            sendMessage();
+          }
+        );
+      });
+    };
+
+    sendMessage();
   });
 }
 

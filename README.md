@@ -30,3 +30,4 @@ A lightweight Chrome extension UI that automatically corrects common typing mist
 
 This project is intentionally lightweight and uses a built-in dictionary plus common misspelling replacements.
 Ad filtering hides recognized page elements; it does not block network requests, and some ads may not be detected.
+The popup injects the content script on demand if it is not yet available in the active tab. Chrome restricts extensions from running on some pages, including Chrome settings and the Chrome Web Store.

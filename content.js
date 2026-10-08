@@ -1,3 +1,10 @@
+(() => {
+  const initializedKey = '__spellCorrecterContentScriptInitialized';
+  if (globalThis[initializedKey]) {
+    return;
+  }
+  globalThis[initializedKey] = true;
+
 const commonCorrections = {
   teh: 'the',
   thier: 'their',
@@ -462,3 +469,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 injectSuggestionStyles();
 hideSuggestions();
 observeTextInputs();
+})();
