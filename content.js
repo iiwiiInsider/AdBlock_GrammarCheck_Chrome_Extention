@@ -122,7 +122,6 @@ const state = {
 };
 
 const suggestionBoxId = 'spell-correcter-suggestions';
-let activeSuggestion = null;
 
 chrome.storage.local.get(['spellCorrecterEnabled'], (result) => {
   state.enabled = result.spellCorrecterEnabled !== false;
@@ -394,25 +393,6 @@ function hideSuggestions() {
   if (existing) {
     existing.remove();
   }
-  activeSuggestion = null;
-}
-
-function selectSuggestion(index) {
-  if (!activeSuggestion) {
-    return;
-  }
-
-  activeSuggestion.index = index;
-  const box = document.getElementById(suggestionBoxId);
-  if (!box) {
-    return;
-  }
-
-  Array.from(box.children).forEach((button, buttonIndex) => {
-    const selected = buttonIndex === index;
-    button.classList.toggle('active', selected);
-    button.setAttribute('aria-selected', String(selected));
-  });
 }
 
 function applySuggestion(element, wordInfo, suggestion) {
@@ -453,18 +433,13 @@ function renderSuggestions(element, wordInfo) {
   }
 
   box.innerHTML = '';
-  activeSuggestion = { element, wordInfo, suggestions, index: 0 };
-  suggestions.forEach((suggestion, index) => {
+  suggestions.forEach((suggestion) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'spell-correcter-suggestion';
     button.textContent = applyCase(wordInfo.word, suggestion);
     button.setAttribute('role', 'option');
-    button.setAttribute('aria-selected', String(index === activeSuggestion.index));
     button.tabIndex = -1;
-    if (index === activeSuggestion.index) {
-      button.classList.add('active');
-    }
     button.addEventListener('click', () => {
       applySuggestion(element, wordInfo, suggestion);
     });
@@ -617,47 +592,6 @@ function handleTypingSuggestions(event) {
 }
 
 function observeTextInputs() {
-  document.addEventListener('keydown', (event) => {
-    if (
-      !activeSuggestion
-      || event.target !== activeSuggestion.element
-      || !state.enabled
-    ) {
-      return;
-    }
-
-    if (event.key === 'Tab' && activeSuggestion.suggestions.length > 1) {
-      event.preventDefault();
-      event.stopPropagation();
-      const direction = event.shiftKey ? -1 : 1;
-      const count = activeSuggestion.suggestions.length;
-      const nextIndex = (activeSuggestion.index + direction + count) % count;
-      selectSuggestion(nextIndex);
-      return;
-    }
-
-    if (event.key === 'Tab' && event.shiftKey) {
-      return;
-    }
-
-    if (event.key !== 'Tab' && event.key !== 'Enter') {
-      return;
-    }
-
-    if (event.key === 'Enter' && activeSuggestion.suggestions.length < 2) {
-      return;
-    }
-
-    const suggestion = activeSuggestion.suggestions[activeSuggestion.index];
-    if (!suggestion) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-    applySuggestion(activeSuggestion.element, activeSuggestion.wordInfo, suggestion);
-  }, true);
-
   document.addEventListener('input', (event) => {
     const target = event.target;
     if (target && isTextEditableElement(target) && !correctingElements.has(target)) {
