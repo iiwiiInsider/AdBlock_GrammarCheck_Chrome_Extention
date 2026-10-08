@@ -51,20 +51,71 @@ const commonCorrections = {
   xmas: 'Christmas'
 };
 
-const dictionary = [
-  'the', 'their', 'there', 'that', 'this', 'with', 'from', 'your', 'have',
-  'been', 'would', 'about', 'which', 'after', 'other', 'could', 'people',
-  'first', 'because', 'through', 'those', 'should', 'where', 'while', 'world',
-  'great', 'every', 'under', 'before', 'between', 'another', 'little', 'using',
-  'without', 'number', 'however', 'school', 'state', 'right', 'place', 'years',
-  'thought', 'still', 'together', 'language', 'example', 'account', 'receive',
-  'receiving', 'address', 'calendar', 'separate', 'definitely', 'necessary',
-  'successful', 'environment', 'maintenance', 'writing', 'whether', 'whole',
-  'initial', 'foreign', 'example', 'different', 'important', 'business', 'answer',
-  'question', 'english', 'website', 'chrome', 'browser', 'extension', 'typing',
-  'correct', 'correction', 'mistake', 'common', 'spell', 'words', 'real', 'time',
-  'suggestion', 'suggestions', 'suggested', 'input', 'field', 'website', 'document'
-];
+let dictionaryText = '';
+let dictionaryOffsets = new Uint32Array(0);
+const dictionaryBuckets = new Map();
+let dictionaryReady = false;
+
+function initializeDictionary(text) {
+  const separator = '\n---\n';
+  const separatorIndex = text.indexOf(separator);
+  if (separatorIndex === -1) {
+    throw new Error('Dictionary data separator is missing.');
+  }
+
+  text = text.slice(separatorIndex + separator.length);
+  dictionaryText = text;
+  let lineStart = 0;
+  let totalWords = 0;
+
+  while (lineStart < text.length) {
+    const lineEnd = text.indexOf('\n', lineStart);
+    const end = lineEnd === -1 ? text.length : lineEnd;
+    const bucketKey = `${end - lineStart}:${text[lineStart]}`;
+    const bucket = dictionaryBuckets.get(bucketKey);
+
+    if (bucket) {
+      bucket.count += 1;
+    } else {
+      dictionaryBuckets.set(bucketKey, { count: 1 });
+    }
+    totalWords += 1;
+    lineStart = end + 1;
+  }
+
+  let bucketStart = 0;
+  for (const bucket of dictionaryBuckets.values()) {
+    bucket.start = bucketStart;
+    bucket.cursor = bucketStart;
+    bucketStart += bucket.count;
+    bucket.end = bucketStart;
+  }
+
+  dictionaryOffsets = new Uint32Array(totalWords);
+  lineStart = 0;
+  while (lineStart < text.length) {
+    const lineEnd = text.indexOf('\n', lineStart);
+    const end = lineEnd === -1 ? text.length : lineEnd;
+    const bucket = dictionaryBuckets.get(`${end - lineStart}:${text[lineStart]}`);
+    dictionaryOffsets[bucket.cursor] = lineStart;
+    bucket.cursor += 1;
+    lineStart = end + 1;
+  }
+
+  dictionaryReady = true;
+}
+
+fetch(chrome.runtime.getURL('english-words.txt'))
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(`Dictionary request failed with status ${response.status}.`);
+    }
+    return response.text();
+  })
+  .then(initializeDictionary)
+  .catch((error) => {
+    console.error('Spell Correcter could not load its offline dictionary.', error);
+  });
 
 const state = {
   enabled: true
@@ -131,29 +182,70 @@ function applyCase(original, corrected) {
   return corrected;
 }
 
-function levenshteinDistance(a, b) {
-  const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+function levenshteinDistance(a, b, rows) {
+  if (Math.abs(a.length - b.length) > 2) {
+    return 3;
+  }
 
-  for (let i = 0; i <= a.length; i += 1) dp[i][0] = i;
-  for (let j = 0; j <= b.length; j += 1) dp[0][j] = j;
+  let previous = rows[0];
+  let current = rows[1];
+  previous.fill(3);
+  for (let j = 0; j <= Math.min(b.length, 2); j += 1) {
+    previous[j] = j;
+  }
 
   for (let i = 1; i <= a.length; i += 1) {
-    for (let j = 1; j <= b.length; j += 1) {
+    current.fill(3);
+    current[0] = i;
+    let rowMinimum = 3;
+
+    for (let j = Math.max(1, i - 2); j <= Math.min(b.length, i + 2); j += 1) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + cost
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + cost
       );
+      rowMinimum = Math.min(rowMinimum, current[j]);
+    }
+
+    if (rowMinimum > 2) {
+      return 3;
+    }
+
+    [previous, current] = [current, previous];
+  }
+
+  return previous[b.length] <= 2 ? previous[b.length] : 3;
+}
+
+function dictionaryContains(word) {
+  let low = 0;
+  let high = dictionaryText.length - 1;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const start = dictionaryText.lastIndexOf('\n', middle - 1) + 1;
+    const newline = dictionaryText.indexOf('\n', middle);
+    const end = newline === -1 ? dictionaryText.length : newline;
+    const candidate = dictionaryText.slice(start, end);
+
+    if (candidate === word) {
+      return true;
+    }
+    if (candidate < word) {
+      low = end + 1;
+    } else {
+      high = start - 1;
     }
   }
 
-  return dp[a.length][b.length];
+  return false;
 }
 
 function getDictionarySuggestions(word, limit = 5) {
   const normalized = word.toLowerCase();
-  if (!normalized || normalized.length < 2) {
+  if (!dictionaryReady || !normalized || normalized.length < 2 || normalized.length > 32) {
     return [];
   }
 
@@ -163,12 +255,33 @@ function getDictionarySuggestions(word, limit = 5) {
     results.set(commonCorrections[normalized], 0);
   }
 
-  for (const item of dictionary) {
-    const distance = levenshteinDistance(normalized, item);
-    if (distance <= 2 && item !== normalized) {
-      const current = results.get(item);
-      if (current === undefined || distance < current) {
-        results.set(item, distance);
+  const rows = [
+    new Uint8Array(normalized.length + 3),
+    new Uint8Array(normalized.length + 3)
+  ];
+  const minimumLength = Math.max(1, normalized.length - 2);
+  const maximumLength = normalized.length + 2;
+
+  for (let candidateLength = minimumLength; candidateLength <= maximumLength; candidateLength += 1) {
+    const bucket = dictionaryBuckets.get(`${candidateLength}:${normalized[0]}`);
+    if (!bucket) {
+      continue;
+    }
+
+    for (let index = bucket.start; index < bucket.end; index += 1) {
+      const lineStart = dictionaryOffsets[index];
+      const lineEnd = dictionaryText.indexOf('\n', lineStart);
+      const candidate = dictionaryText.slice(lineStart, lineEnd === -1 ? undefined : lineEnd);
+      if (candidate === normalized) {
+        continue;
+      }
+
+      const distance = levenshteinDistance(normalized, candidate, rows);
+      if (distance <= 2) {
+        const current = results.get(candidate);
+        if (current === undefined || distance < current) {
+          results.set(candidate, distance);
+        }
       }
     }
   }
@@ -232,7 +345,7 @@ function setCaretPositionInContentEditable(element, offset) {
 }
 
 function getWordInfoFromInput(element) {
-  if (!element || !isTextEditableElement(element)) {
+  if (!dictionaryReady || !element || !isTextEditableElement(element)) {
     return null;
   }
 
@@ -244,11 +357,11 @@ function getWordInfoFromInput(element) {
   let start = cursorPosition;
   let end = cursorPosition;
 
-  while (start > 0 && /[A-Za-z'-]/.test(value[start - 1])) {
+  while (start > 0 && /[\p{L}\p{M}'-]/u.test(value[start - 1])) {
     start -= 1;
   }
 
-  while (end < value.length && /[A-Za-z'-]/.test(value[end])) {
+  while (end < value.length && /[\p{L}\p{M}'-]/u.test(value[end])) {
     end += 1;
   }
 
@@ -257,7 +370,7 @@ function getWordInfoFromInput(element) {
     return null;
   }
 
-  if (dictionary.includes(word.toLowerCase())) {
+  if (dictionaryContains(word.toLowerCase())) {
     return null;
   }
 
@@ -326,39 +439,115 @@ function renderSuggestions(element, wordInfo) {
   box.style.display = 'flex';
 }
 
-function correctElement(element) {
+const correctingElements = new WeakSet();
+
+function replaceInputText(element, start, end, replacement) {
+  const originalCaretPosition = element.selectionStart;
+  const updatedValue = `${element.value.slice(0, start)}${replacement}${element.value.slice(end)}`;
+  const valueDescriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), 'value');
+  if (valueDescriptor?.set) {
+    valueDescriptor.set.call(element, updatedValue);
+  } else {
+    element.value = updatedValue;
+  }
+
+  const caretPosition = originalCaretPosition + replacement.length - (end - start);
+  element.setSelectionRange(caretPosition, caretPosition);
+  correctingElements.add(element);
+  element.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertReplacementText',
+    data: replacement
+  }));
+  correctingElements.delete(element);
+}
+
+function getTextNodeAtOffset(element, offset) {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  let remaining = offset;
+  let node = walker.nextNode();
+
+  while (node) {
+    if (remaining <= node.textContent.length) {
+      return { node, offset: remaining };
+    }
+    remaining -= node.textContent.length;
+    node = walker.nextNode();
+  }
+
+  return null;
+}
+
+function replaceContentEditableText(element, start, end, replacement, originalCaretPosition) {
+  const startPoint = getTextNodeAtOffset(element, start);
+  const endPoint = getTextNodeAtOffset(element, end);
+  if (!startPoint || !endPoint) {
+    return false;
+  }
+
+  const range = document.createRange();
+  range.setStart(startPoint.node, startPoint.offset);
+  range.setEnd(endPoint.node, endPoint.offset);
+  range.deleteContents();
+
+  const replacementNode = document.createTextNode(replacement);
+  range.insertNode(replacementNode);
+  const caretPoint = getTextNodeAtOffset(
+    element,
+    originalCaretPosition + replacement.length - (end - start)
+  );
+  if (!caretPoint) {
+    return false;
+  }
+  range.setStart(caretPoint.node, caretPoint.offset);
+  range.collapse(true);
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  correctingElements.add(element);
+  element.dispatchEvent(new InputEvent('input', {
+    bubbles: true,
+    inputType: 'insertReplacementText',
+    data: replacement
+  }));
+  correctingElements.delete(element);
+  return true;
+}
+
+function correctCompletedWord(element) {
   if (!state.enabled || !isTextEditableElement(element)) {
-    return;
+    return false;
   }
 
+  const value = element.value ?? element.textContent ?? '';
+  const cursorPosition = element.isContentEditable
+    ? getCaretPositionInContentEditable(element)
+    : (element.selectionStart ?? value.length);
+  let end = cursorPosition;
+
+  if (end > 0 && !/[\p{L}\p{M}'-]/u.test(value[end - 1])) {
+    end -= 1;
+  }
+
+  let start = end;
+  while (start > 0 && /[\p{L}\p{M}'-]/u.test(value[start - 1])) {
+    start -= 1;
+  }
+
+  const word = value.slice(start, end);
+  const correction = commonCorrections[word.toLowerCase()];
+  if (!correction) {
+    return false;
+  }
+
+  const replacement = applyCase(word, correction);
   if (element.isContentEditable) {
-    const original = element.textContent || '';
-    const fixed = original.replace(/\b[A-Za-z][A-Za-z'-]*\b/g, (match) => {
-      const lower = match.toLowerCase();
-      if (commonCorrections[lower]) {
-        return applyCase(match, commonCorrections[lower]);
-      }
-      return match;
-    });
-
-    if (fixed !== original) {
-      element.textContent = fixed;
-    }
-    return;
+    return replaceContentEditableText(element, start, end, replacement, cursorPosition);
   }
 
-  const original = element.value || '';
-  const fixed = original.replace(/\b[A-Za-z][A-Za-z'-]*\b/g, (match) => {
-    const lower = match.toLowerCase();
-    if (commonCorrections[lower]) {
-      return applyCase(match, commonCorrections[lower]);
-    }
-    return match;
-  });
-
-  if (fixed !== original) {
-    element.value = fixed;
-  }
+  replaceInputText(element, start, end, replacement);
+  return true;
 }
 
 function handleTypingSuggestions(event) {
@@ -385,8 +574,8 @@ function handleTypingSuggestions(event) {
 function observeTextInputs() {
   document.addEventListener('input', (event) => {
     const target = event.target;
-    if (target && isTextEditableElement(target)) {
-      correctElement(target);
+    if (target && isTextEditableElement(target) && !correctingElements.has(target)) {
+      correctCompletedWord(target);
       handleTypingSuggestions(event);
     }
   }, true);
@@ -420,7 +609,7 @@ function fixAllEditableFields() {
   let count = 0;
   editableElements.forEach((element) => {
     const before = element.value ?? element.textContent ?? '';
-    const after = before.replace(/\b[A-Za-z][A-Za-z'-]*\b/g, (match) => {
+    const after = before.replace(/[\p{L}][\p{L}'-]*/gu, (match) => {
       const lower = match.toLowerCase();
       if (commonCorrections[lower]) {
         return applyCase(match, commonCorrections[lower]);

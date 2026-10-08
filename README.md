@@ -4,7 +4,7 @@ A lightweight Chrome extension UI that automatically corrects common typing mist
 
 ## Features
 
-- Auto-corrects common misspellings like `teh` → `the`
+- Auto-corrects common misspellings like `teh` → `the` as you type, while preserving the cursor position
 - Works in text inputs, textareas, and contenteditable elements
 - Includes a popup toggle to enable or disable the feature
 - Includes a “Fix This Page” action to correct existing fields on the current page
@@ -22,12 +22,16 @@ A lightweight Chrome extension UI that automatically corrects common typing mist
 - `manifest.json` – Chrome extension manifest
 - `ad-blocker.js` – hides common ad containers and ad-network embeds
 - `content.js` – spell correction logic and page input handling
+- `english-words.txt` – bundled offline English word list
+- `ENGLISH-WORDS-LICENSE.txt` – word-list attribution and license terms
 - `popup.html` – extension popup UI
 - `popup.js` – popup logic to toggle and fix current page
 - `popup.css` – popup styling
 
 ## Notes
 
-This project is intentionally lightweight and uses a built-in dictionary plus common misspelling replacements.
+The extension bundles an offline word list of about 645,000 unique words, including American, British, Canadian, and Australian spelling variants. It uses this list to recognize words and provide suggestions; automatic replacements remain limited to the common typo mappings in `content.js`.
+The word list is derived from [SCOWL/GNU Aspell](https://github.com/en-wl/wordlist) through the [dictionary-word-list](https://github.com/nlile/dictionary-word-list) project. See [ENGLISH-WORDS-LICENSE.txt](./ENGLISH-WORDS-LICENSE.txt) for attribution and license terms.
+
 Ad filtering hides recognized page elements; it does not block network requests, and some ads may not be detected.
 The popup injects the content script on demand if it is not yet available in the active tab. Chrome restricts extensions from running on some pages, including Chrome settings and the Chrome Web Store.
