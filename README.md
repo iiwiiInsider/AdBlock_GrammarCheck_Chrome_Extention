@@ -6,6 +6,8 @@ A lightweight Chrome extension UI that automatically corrects common typing mist
 
 - Auto-corrects common misspellings like `teh` → `the` as you type, while preserving the cursor position
 - Works in text inputs, textareas, and contenteditable elements
+- Press Tab to accept the active spelling suggestion; Tab behaves normally when no suggestion is open
+- Suggestion buttons wrap long words and resize to fit the viewport
 - Includes a popup toggle to enable or disable the feature
 - Includes a “Fix This Page” action to correct existing fields on the current page
 - Hides common ad containers and embeds on webpages

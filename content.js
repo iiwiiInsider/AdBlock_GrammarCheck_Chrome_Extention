@@ -122,6 +122,7 @@ const state = {
 };
 
 const suggestionBoxId = 'spell-correcter-suggestions';
+let activeSuggestion = null;
 
 chrome.storage.local.get(['spellCorrecterEnabled'], (result) => {
   state.enabled = result.spellCorrecterEnabled !== false;
@@ -138,20 +139,27 @@ function injectSuggestionStyles() {
     .spell-correcter-suggestions {
       position: fixed;
       z-index: 2147483647;
-      display: flex;
+      display: none;
       gap: 6px;
       flex-wrap: wrap;
+      align-items: flex-start;
       background: rgba(17, 24, 39, 0.97);
       color: white;
       border: 1px solid rgba(148, 163, 184, 0.7);
       border-radius: 10px;
       padding: 8px 10px;
       box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
-      max-width: 320px;
+      width: max-content;
+      max-width: min(420px, calc(100vw - 20px));
+      max-height: 40vh;
+      overflow-y: auto;
+      box-sizing: border-box;
       pointer-events: auto;
     }
 
     .spell-correcter-suggestion {
+      min-width: 0;
+      max-width: 100%;
       background: #2563eb;
       border: none;
       border-radius: 999px;
@@ -160,10 +168,14 @@ function injectSuggestionStyles() {
       font-size: 12px;
       cursor: pointer;
       line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      text-align: left;
       transition: background 0.15s ease;
     }
 
-    .spell-correcter-suggestion:hover {
+    .spell-correcter-suggestion:hover,
+    .spell-correcter-suggestion.active {
       background: #1d4ed8;
     }
   `;
@@ -382,6 +394,28 @@ function hideSuggestions() {
   if (existing) {
     existing.remove();
   }
+  activeSuggestion = null;
+}
+
+function applySuggestion(element, wordInfo, suggestion) {
+  const replacement = applyCase(wordInfo.word, suggestion);
+  if (element.isContentEditable) {
+    const cursorPosition = getCaretPositionInContentEditable(element);
+    replaceContentEditableText(
+      element,
+      wordInfo.start,
+      wordInfo.end,
+      replacement,
+      cursorPosition
+    );
+  } else {
+    const caretPosition = wordInfo.start + replacement.length;
+    replaceInputText(element, wordInfo.start, wordInfo.end, replacement);
+    element.focus();
+    element.setSelectionRange(caretPosition, caretPosition);
+  }
+
+  hideSuggestions();
 }
 
 function renderSuggestions(element, wordInfo) {
@@ -396,47 +430,40 @@ function renderSuggestions(element, wordInfo) {
     box = document.createElement('div');
     box.id = suggestionBoxId;
     box.className = 'spell-correcter-suggestions';
+    box.setAttribute('role', 'listbox');
     document.body.appendChild(box);
   }
 
   box.innerHTML = '';
-  suggestions.forEach((suggestion) => {
+  activeSuggestion = { element, wordInfo, suggestions, index: 0 };
+  suggestions.forEach((suggestion, index) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'spell-correcter-suggestion';
     button.textContent = applyCase(wordInfo.word, suggestion);
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', String(index === activeSuggestion.index));
+    button.tabIndex = -1;
+    if (index === activeSuggestion.index) {
+      button.classList.add('active');
+    }
     button.addEventListener('click', () => {
-      const currentText = element.value ?? element.textContent ?? '';
-      const before = currentText.slice(0, wordInfo.start);
-      const after = currentText.slice(wordInfo.end);
-      const replacement = applyCase(wordInfo.word, suggestion);
-      const updatedText = `${before}${replacement}${after}`;
-
-      if (element.isContentEditable) {
-        element.textContent = updatedText;
-        const caretIndex = before.length + replacement.length;
-        setCaretPositionInContentEditable(element, caretIndex);
-      } else {
-        element.value = updatedText;
-        const caretIndex = before.length + replacement.length;
-        element.focus();
-        element.setSelectionRange(caretIndex, caretIndex);
-      }
-
-      hideSuggestions();
+      applySuggestion(element, wordInfo, suggestion);
     });
     box.appendChild(button);
   });
 
   const rect = element.getBoundingClientRect();
-  const boxWidth = Math.min(320, suggestions.length * 80 + 20);
-  const top = Math.max(8, rect.top - 45);
-  const left = Math.min(window.innerWidth - boxWidth - 10, rect.left);
-
-  box.style.left = `${Math.max(10, left)}px`;
-  box.style.top = `${Math.max(10, top)}px`;
-  box.style.width = `${boxWidth}px`;
   box.style.display = 'flex';
+  const boxRect = box.getBoundingClientRect();
+  const left = Math.max(10, Math.min(rect.left, window.innerWidth - boxRect.width - 10));
+  const above = rect.top - boxRect.height - 8;
+  const top = above >= 8
+    ? above
+    : Math.min(window.innerHeight - boxRect.height - 8, rect.bottom + 8);
+
+  box.style.left = `${left}px`;
+  box.style.top = `${Math.max(8, top)}px`;
 }
 
 const correctingElements = new WeakSet();
@@ -572,6 +599,27 @@ function handleTypingSuggestions(event) {
 }
 
 function observeTextInputs() {
+  document.addEventListener('keydown', (event) => {
+    if (
+      event.key !== 'Tab'
+      || event.shiftKey
+      || !activeSuggestion
+      || event.target !== activeSuggestion.element
+      || !state.enabled
+    ) {
+      return;
+    }
+
+    const suggestion = activeSuggestion.suggestions[activeSuggestion.index];
+    if (!suggestion) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    applySuggestion(activeSuggestion.element, activeSuggestion.wordInfo, suggestion);
+  }, true);
+
   document.addEventListener('input', (event) => {
     const target = event.target;
     if (target && isTextEditableElement(target) && !correctingElements.has(target)) {
