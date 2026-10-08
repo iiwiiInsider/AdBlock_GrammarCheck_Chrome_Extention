@@ -24,13 +24,11 @@ body {
   justify-content: center;
 }
 
-.no-symbol {
+.logo-icon {
   width: 68px;
   height: 68px;
-  fill: none;
-  stroke: #dc2626;
-  stroke-width: 6;
-  stroke-linecap: round;
+  object-fit: contain;
+  display: block;
 }
 
 h1 {
