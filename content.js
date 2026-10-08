@@ -397,6 +397,24 @@ function hideSuggestions() {
   activeSuggestion = null;
 }
 
+function selectSuggestion(index) {
+  if (!activeSuggestion) {
+    return;
+  }
+
+  activeSuggestion.index = index;
+  const box = document.getElementById(suggestionBoxId);
+  if (!box) {
+    return;
+  }
+
+  Array.from(box.children).forEach((button, buttonIndex) => {
+    const selected = buttonIndex === index;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-selected', String(selected));
+  });
+}
+
 function applySuggestion(element, wordInfo, suggestion) {
   const replacement = applyCase(wordInfo.word, suggestion);
   if (element.isContentEditable) {
@@ -601,12 +619,32 @@ function handleTypingSuggestions(event) {
 function observeTextInputs() {
   document.addEventListener('keydown', (event) => {
     if (
-      event.key !== 'Tab'
-      || event.shiftKey
-      || !activeSuggestion
+      !activeSuggestion
       || event.target !== activeSuggestion.element
       || !state.enabled
     ) {
+      return;
+    }
+
+    if (event.key === 'Tab' && activeSuggestion.suggestions.length > 1) {
+      event.preventDefault();
+      event.stopPropagation();
+      const direction = event.shiftKey ? -1 : 1;
+      const count = activeSuggestion.suggestions.length;
+      const nextIndex = (activeSuggestion.index + direction + count) % count;
+      selectSuggestion(nextIndex);
+      return;
+    }
+
+    if (event.key === 'Tab' && event.shiftKey) {
+      return;
+    }
+
+    if (event.key !== 'Tab' && event.key !== 'Enter') {
+      return;
+    }
+
+    if (event.key === 'Enter' && activeSuggestion.suggestions.length < 2) {
       return;
     }
 
