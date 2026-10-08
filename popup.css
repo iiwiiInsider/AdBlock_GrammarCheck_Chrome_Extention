@@ -71,6 +71,8 @@ h1 {
 .actions {
   display: flex;
   justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 button {
@@ -91,6 +93,12 @@ button.primary {
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
   min-width: 126px;
+}
+
+button.secondary {
+  background: #eef2ff;
+  color: #1f2937;
+  min-width: 120px;
 }
 
 .status {
